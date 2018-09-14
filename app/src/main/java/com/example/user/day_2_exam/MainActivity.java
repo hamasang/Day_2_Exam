@@ -1,10 +1,13 @@
 package com.example.user.day_2_exam;
 
 import android.Manifest;
+import android.annotation.TargetApi;
 import android.content.Intent;
+import android.os.Build;
 import android.speech.RecognitionListener;
 import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
+import android.speech.tts.TextToSpeech;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -19,6 +22,10 @@ import net.alhazmy13.gota.Gota;
 import net.alhazmy13.gota.GotaResponse;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Locale;
+
+import static android.speech.tts.TextToSpeech.ERROR;
 
 public class MainActivity extends AppCompatActivity implements Gota.OnRequestPermissionsBack {
 
@@ -26,6 +33,10 @@ public class MainActivity extends AppCompatActivity implements Gota.OnRequestPer
     Button button;
     SpeechRecognizer mRecongizer;
     boolean power = false;
+    Button button1;
+    EditText editText;
+    TextToSpeech tts;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -52,6 +63,29 @@ public class MainActivity extends AppCompatActivity implements Gota.OnRequestPer
 
                 }
 
+            }
+        });
+
+        button1 = findViewById(R.id.button1);
+        editText = findViewById(R.id.editText);
+        tts = new TextToSpeech(this, new TextToSpeech.OnInitListener() {
+            @Override
+            public void onInit(int status) {
+                if(status != ERROR){
+                    tts.setLanguage(Locale.KOREAN);
+                }
+            }
+        });
+        button1.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                tts.setPitch(1.0f);
+                tts.setSpeechRate(1.0f);
+                if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP){
+                    ttsGreater21(editText.getText().toString());
+                }else{
+                    ttsUnder20(editText.getText().toString());
+                }
             }
         });
     }
@@ -119,5 +153,17 @@ public class MainActivity extends AppCompatActivity implements Gota.OnRequestPer
         if(gotaResponse.isGranted(Manifest.permission.RECORD_AUDIO) && gotaResponse.isGranted(Manifest.permission.INTERNET)){
 
         }
+    }
+
+    private void ttsUnder20(String text) {
+        HashMap<String, String> map = new HashMap<>();
+        map.put(TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID, "MessageId");
+        tts.speak(text, TextToSpeech.QUEUE_FLUSH, map);
+    }
+
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+    private void ttsGreater21(String text) {
+        String utteranceId = this.hashCode() + "";
+        tts.speak(text, TextToSpeech.QUEUE_FLUSH, null, utteranceId);
     }
 }
